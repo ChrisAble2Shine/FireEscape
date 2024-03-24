@@ -1,5 +1,6 @@
 namespace SpriteKind {
     export const Coin = SpriteKind.create()
+    export const fireball = SpriteKind.create()
 }
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile0`, function (sprite, location) {
     game.gameOver(false)
@@ -12,6 +13,11 @@ controller.A.onEvent(ControllerButtonEvent.Pressed, function () {
         supercat.vy = -160
     }
 })
+sprites.onOverlap(SpriteKind.Player, SpriteKind.fireball, function (sprite, otherSprite) {
+    info.changeLifeBy(-2)
+    sprites.destroy(otherSprite)
+})
+let fireball: Sprite = null
 let supercat: Sprite = null
 scene.setBackgroundColor(9)
 scene.setBackgroundImage(img`
@@ -156,10 +162,40 @@ supercat = sprites.create(img`
     `, SpriteKind.Player)
 controller.moveSprite(supercat, 100, 0)
 tiles.setCurrentTilemap(tilemap`level2`)
+info.setLife(12)
 tiles.placeOnRandomTile(supercat, assets.tile`myTile3`)
 scene.cameraFollowSprite(supercat)
 for (let value of tiles.getTilesByType(assets.tile`myTile3`)) {
     tiles.setTileAt(value, assets.tile`transparency16`)
+}
+for (let value of tiles.getTilesByType(assets.tile`myTile6`)) {
+    fireball = sprites.create(img`
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . 5 5 5 5 5 5 5 5 . . . . . 
+        . . . 5 . . 4 4 4 . 5 5 5 . . . 
+        . . 5 5 . 4 4 . 4 4 4 . 5 5 . . 
+        . . 5 4 4 4 2 2 2 2 . 4 4 5 . . 
+        . . 5 4 4 2 2 8 2 2 2 . 4 5 . . 
+        . . 5 4 2 2 8 8 8 2 2 . 4 5 . . 
+        . 5 5 4 2 2 8 8 8 2 2 4 4 5 . . 
+        . 5 5 4 2 2 2 8 2 2 . 4 . 5 . . 
+        . . 5 4 . 2 2 2 2 2 4 4 5 5 . . 
+        . . 5 . 4 4 2 2 . . 4 . 5 . . . 
+        . . 5 5 5 5 4 4 4 4 4 5 5 . . . 
+        . . . . . 5 5 5 5 5 5 5 . . . . 
+        . . . . . . . . . . . . . . . . 
+        . . . . . . . . . . . . . . . . 
+        `, SpriteKind.fireball)
+    tiles.placeOnTile(fireball, value)
+    tiles.setTileAt(value, assets.tile`transparency16`)
+    animation.runMovementAnimation(
+    fireball,
+    animation.animationPresets(animation.bobbing),
+    1000,
+    true
+    )
+    fireball.startEffect(effects.fire)
 }
 game.onUpdate(function () {
     supercat.setImage(img`
@@ -228,7 +264,8 @@ game.onUpdate(function () {
     } else {
         supercat.ay = 350
     }
-    if (supercat.vx < 0) {
+    if (supercat.vx < 0 || supercat.isHittingTile(CollisionDirection.Left)) {
         supercat.image.flipX()
+        supercat.setImage(supercat.image)
     }
 })
